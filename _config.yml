@@ -102,8 +102,3 @@ theme: next
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
-  type: 'sftp'
-  user: 'dymos_server'
-  host: '185.225.39.250'
-  remotePath: '/home/dymos_server/www/blog/public/'
-  privateKey: '/home/dymos/.ssh/ssh_key'
