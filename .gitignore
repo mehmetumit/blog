@@ -1,3 +1,5 @@
+# Static web files
+public/
 # Logs
 logs
 *.log
