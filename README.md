@@ -1,2 +1,2 @@
-# blog
-Blog website
+# Blog Page
+My blog page 
