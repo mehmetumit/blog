@@ -34,3 +34,12 @@ jobs:
           key: ${{ secrets.SSHKEY }}
           source: "./public"
           target: ${{ secrets.PATH }}
+
+      - name: Restart
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          port: ${{ secrets.PORT }}
+          key: ${{ secrets.SSHKEY }}
+          script: docker-compose -f ${{ secrets.PATH }}/../docker-compose.yml restart blog

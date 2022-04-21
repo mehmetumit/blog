@@ -7,13 +7,13 @@ tags: Linux
 * First install packages
 
 ```
-sudo pacman -S retroarch retroarch-assets-glui retroarch-assets-ozone retroarch-assets-xmb libretro-core-info
+sudo pacman -S retroarch retroarch-assets-xmb libretro-core-info
 ```
 
-* Change visibility of core updater to download cores from retroarch directly
+* Change visibility of core updater to download cores from retroarch directly and change cores directory.
 **~/.config/retroarch/retroarch.cfg**
 ```
 menu_show_core_updater = "true"
+libretro_directory = "~/.config/retroarch/cores"
 ```
-* Open retroarch than go to settings->directory change cores directory to **~/.config/retroarch/cores**
 * After that, update databases from online updater. Now you can easily install cores from core downloader 🎮🎮🎮
