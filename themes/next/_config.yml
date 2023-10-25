@@ -95,7 +95,7 @@ menu:
   #tags: /tags/ || fa fa-tags
   #categories: /categories/ || fa fa-th
   archives: /archives/ || fa fa-archive
-  about: https://mehmetumit.me || fa fa-user
+  about: https://mehmetumit.com.tr || fa fa-user
   # schedule: /schedule/ || fa fa-calendar
   # sitemap: /sitemap.xml || fa fa-sitemap
   # commonweal: /404/ || fa fa-heartbeat
@@ -149,7 +149,7 @@ site_state: true
 # Key is the link label showing to end users.
 # Value before `||` delimiter is the target permalink, value after `||` delimiter is the name of Font Awesome icon.
 social:
-  Portfolio: https://mehmetumit.me/ || fa fa-user-circle
+  Portfolio: https://mehmetumit.com.tr/ || fa fa-user-circle
   GitHub: https://github.com/mehmetumit || fab fa-github
   E-Mail:
     mailto:ozdenmehmetumit@gmail.com || fa fa-envelope
@@ -160,7 +160,7 @@ social:
   #YouTube: https://youtube.com/yourname || fab fa-youtube
   #Instagram: https://instagram.com/yourname || fab fa-instagram
   #Skype: skype:yourname?call|chat || fab fa-skype
-  Linkedin: https://www.linkedin.com/in/mehmet-ümit-özden-66774b208/ || fab fa-linkedin
+  Linkedin: https://www.linkedin.com/in/mehmetumitozden || fab fa-linkedin
 
 social_icons:
   enable: true
