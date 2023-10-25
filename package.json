@@ -2,9 +2,10 @@
   "name": "blog",
   "version": "1.0.0",
   "scripts": {
+    "build-deploy": "npx hexo generate && npx hexo deploy",
     "build": "npx hexo generate",
     "clean": "npx hexo clean",
-    "deploy": "node deploy.js",
+    "deploy": "npx hexo deploy",
     "server": "npx hexo server"
   },
   "hexo": {

@@ -1,3 +1,6 @@
+# Deploy
+.deploy_git/
+
 # Static web files
 public/
 # Logs
