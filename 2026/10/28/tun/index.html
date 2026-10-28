@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1D3640" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" integrity="sha256-jTIdiMuX/e3DGJUGwl3pKSxuc6YOuqtJYkM0bGQESA4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/themes/blue/pace-theme-flash.css">
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.mehmetumit.com.tr","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.10.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="Building a Unified SSH and VPN Connection Manager for LinuxAs a software engineer, I frequently connect to remote servers, establish SSH tunnels, and switch between different VPN environments. Althoug">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Managing SSH Tunnels and VPN Connections with a Single Linux Command">
+<meta property="og:url" content="https://blog.mehmetumit.com.tr/2026/10/28/tun/index.html">
+<meta property="og:site_name" content="Mehmet Ümit Özden">
+<meta property="og:description" content="Building a Unified SSH and VPN Connection Manager for LinuxAs a software engineer, I frequently connect to remote servers, establish SSH tunnels, and switch between different VPN environments. Althoug">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-10-28T19:03:00.000Z">
+<meta property="article:modified_time" content="2026-10-28T20:22:03.143Z">
+<meta property="article:author" content="Mehmet Ümit Özden">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="SSH">
+<meta property="article:tag" content="VPN">
+<meta property="article:tag" content="SOCKS5">
+<meta property="article:tag" content="Proxy">
+<meta property="article:tag" content="Port Forwarding">
+<meta property="article:tag" content="KeePassXC">
+<meta property="article:tag" content="OpenConnect">
+<meta property="article:tag" content="Bash">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog.mehmetumit.com.tr/2026/10/28/tun/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://blog.mehmetumit.com.tr/2026/10/28/tun/","path":"2026/10/28/tun/","title":"Managing SSH Tunnels and VPN Connections with a Single Linux Command"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Managing SSH Tunnels and VPN Connections with a Single Linux Command | Mehmet Ümit Özden</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Mehmet Ümit Özden</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">3</span></a></li>
+        <li class="menu-item menu-item-about"><a href="https://mehmetumit.com.tr/" rel="noopener" target="_blank"><i class="fa fa-user fa-fw"></i>About</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Building-a-Unified-SSH-and-VPN-Connection-Manager-for-Linux"><span class="nav-number">1.</span> <span class="nav-text">Building a Unified SSH and VPN Connection Manager for Linux</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#What-Does-It-Do"><span class="nav-number">1.1.</span> <span class="nav-text">What Does It Do?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-A-Unified-Command-Line-Interface"><span class="nav-number">1.2.</span> <span class="nav-text">1. A Unified Command-Line Interface</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Direct-Command-Line-Arguments"><span class="nav-number">1.2.1.</span> <span class="nav-text">Direct Command-Line Arguments</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Managing-SSH-Hosts-with-SSH-Config"><span class="nav-number">1.3.</span> <span class="nav-text">2. Managing SSH Hosts with SSH Config</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SSH-Key-Detection"><span class="nav-number">1.3.1.</span> <span class="nav-text">SSH Key Detection</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-Integrating-KeePassXC-for-SSH-Credentials"><span class="nav-number">1.4.</span> <span class="nav-text">3. Integrating KeePassXC for SSH Credentials</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Automatic-Credential-Selection"><span class="nav-number">1.4.1.</span> <span class="nav-text">Automatic Credential Selection</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Passing-Passwords-to-SSH"><span class="nav-number">1.4.2.</span> <span class="nav-text">Passing Passwords to SSH</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Managing-VPN-Profiles-with-OpenConnect-and-OpenVPN"><span class="nav-number">1.5.</span> <span class="nav-text">4. Managing VPN Profiles with OpenConnect and OpenVPN</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#OpenConnect-Configuration"><span class="nav-number">1.5.1.</span> <span class="nav-text">OpenConnect Configuration</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-Automatic-VPN-Authentication-with-KeePassXC"><span class="nav-number">1.6.</span> <span class="nav-text">5. Automatic VPN Authentication with KeePassXC</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Supporting-Two-Factor-Authentication"><span class="nav-number">1.6.1.</span> <span class="nav-text">Supporting Two-Factor Authentication</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-Automatic-VPN-Reconnection"><span class="nav-number">1.7.</span> <span class="nav-text">6. Automatic VPN Reconnection</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-Complete-Installation-Guide"><span class="nav-number">1.8.</span> <span class="nav-text">7. Complete Installation Guide</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-1-Install-Dependencies"><span class="nav-number">1.8.1.</span> <span class="nav-text">Step 1: Install Dependencies</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-2-Create-the-Directory-Structure"><span class="nav-number">1.8.2.</span> <span class="nav-text">Step 2: Create the Directory Structure</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-3-Install-the-Connection-Script"><span class="nav-number">1.8.3.</span> <span class="nav-text">Step 3: Install the Connection Script</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-4-Configure-the-KeePassXC-Helper"><span class="nav-number">1.8.4.</span> <span class="nav-text">Step 4: Configure the KeePassXC Helper</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-5-Configure-SSH-Hosts"><span class="nav-number">1.8.5.</span> <span class="nav-text">Step 5: Configure SSH Hosts</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-6-Configure-KeePassXC-SSH-Credentials"><span class="nav-number">1.8.6.</span> <span class="nav-text">Step 6: Configure KeePassXC SSH Credentials</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-7-Create-VPN-Configurations"><span class="nav-number">1.8.7.</span> <span class="nav-text">Step 7: Create VPN Configurations</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-8-Configure-KeePassXC-VPN-Credentials"><span class="nav-number">1.8.8.</span> <span class="nav-text">Step 8: Configure KeePassXC VPN Credentials</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-9-Load-the-Shell-Functions"><span class="nav-number">1.8.9.</span> <span class="nav-text">Step 9: Load the Shell Functions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-10-Prepare-VPN-Permissions"><span class="nav-number">1.8.10.</span> <span class="nav-text">Step 10: Prepare VPN Permissions</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-Complete-Usage-Examples"><span class="nav-number">1.9.</span> <span class="nav-text">8. Complete Usage Examples</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Example-1-Connect-to-a-Server-with-KeePassXC"><span class="nav-number">1.9.1.</span> <span class="nav-text">Example 1: Connect to a Server with KeePassXC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Example-2-Connect-Using-an-SSH-Key"><span class="nav-number">1.9.2.</span> <span class="nav-text">Example 2: Connect Using an SSH Key</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Example-3-Create-a-Local-SSH-Tunnel"><span class="nav-number">1.9.3.</span> <span class="nav-text">Example 3: Create a Local SSH Tunnel</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Example-4-Create-a-Reverse-SSH-Tunnel"><span class="nav-number">1.9.4.</span> <span class="nav-text">Example 4: Create a Reverse SSH Tunnel</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Example-5-Create-a-SOCKS5-Proxy"><span class="nav-number">1.9.5.</span> <span class="nav-text">Example 5: Create a SOCKS5 Proxy</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Example-6-Connect-to-a-VPN-Automatically"><span class="nav-number">1.9.6.</span> <span class="nav-text">Example 6: Connect to a VPN Automatically</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Example-7-Reconnect-After-VPN-Session-Expiration"><span class="nav-number">1.9.7.</span> <span class="nav-text">Example 7: Reconnect After VPN Session Expiration</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Example-8-Use-the-Interactive-Menu"><span class="nav-number">1.9.8.</span> <span class="nav-text">Example 8: Use the Interactive Menu</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-Troubleshooting"><span class="nav-number">1.10.</span> <span class="nav-text">9. Troubleshooting</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#KeePassXC-Keeps-Asking-for-the-Master-Password"><span class="nav-number">1.10.1.</span> <span class="nav-text">KeePassXC Keeps Asking for the Master Password</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SSH-Reports-%E2%80%9CAdministratively-Prohibited%E2%80%9D"><span class="nav-number">1.10.2.</span> <span class="nav-text">SSH Reports “Administratively Prohibited”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reverse-Port-Forwarding-Fails"><span class="nav-number">1.10.3.</span> <span class="nav-text">Reverse Port Forwarding Fails</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OpenConnect-Cannot-Reconnect"><span class="nav-number">1.10.4.</span> <span class="nav-text">OpenConnect Cannot Reconnect</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-Security-Considerations"><span class="nav-number">1.11.</span> <span class="nav-text">10. Security Considerations</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bonus-Unlocking-KeePassXC-Automatically-with-Secret-Service"><span class="nav-number">1.12.</span> <span class="nav-text">Bonus: Unlocking KeePassXC Automatically with Secret Service</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#How-It-Works"><span class="nav-number">1.12.1.</span> <span class="nav-text">How It Works</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-1-Install-Secret-Service-Tools"><span class="nav-number">1.12.2.</span> <span class="nav-text">Step 1: Install Secret Service Tools</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-2-Configure-the-KeePassXC-Database-Path"><span class="nav-number">1.12.3.</span> <span class="nav-text">Step 2: Configure the KeePassXC Database Path</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-3-Store-the-KeePassXC-Master-Password"><span class="nav-number">1.12.4.</span> <span class="nav-text">Step 3: Store the KeePassXC Master Password</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-4-Create-the-KeePass-Helper-Script"><span class="nav-number">1.12.5.</span> <span class="nav-text">Step 4: Create the KeePass Helper Script</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-5-Test-the-Integration"><span class="nav-number">1.12.6.</span> <span class="nav-text">Step 5: Test the Integration</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Security-Considerations"><span class="nav-number">1.12.7.</span> <span class="nav-text">Security Considerations</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Final-Result"><span class="nav-number">1.12.8.</span> <span class="nav-text">Final Result</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Conclusion"><span class="nav-number">1.13.</span> <span class="nav-text">Conclusion</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Mehmet Ümit Özden"
+      src="/images/avatar.jpeg">
+  <p class="site-author-name" itemprop="name">Mehmet Ümit Özden</p>
+  <div class="site-description" itemprop="description">Blog Page</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://mehmetumit.com.tr/" title="Portfolio → https:&#x2F;&#x2F;mehmetumit.com.tr&#x2F;" rel="noopener" target="_blank"><i class="fa fa-user-circle fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://github.com/mehmetumit" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;mehmetumit" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ozdenmehmetumit@gmail.com" title="E-Mail → mailto:ozdenmehmetumit@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.linkedin.com/in/mehmetumitozden" title="Linkedin → https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;mehmetumitozden" rel="noopener" target="_blank"><i class="fab fa-linkedin fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/mehmetumit" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://blog.mehmetumit.com.tr/2026/10/28/tun/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="Mehmet Ümit Özden">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mehmet Ümit Özden">
+      <meta itemprop="description" content="Blog Page">
+    </span>
+    
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Managing SSH Tunnels and VPN Connections with a Single Linux Command | Mehmet Ümit Özden">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Managing SSH Tunnels and VPN Connections with a Single Linux Command
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2026-10-28 22:03:00 / Modified: 23:22:03" itemprop="dateCreated datePublished" datetime="2026-10-28T22:03:00+03:00">2026-10-28</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="Building-a-Unified-SSH-and-VPN-Connection-Manager-for-Linux"><a href="#Building-a-Unified-SSH-and-VPN-Connection-Manager-for-Linux" class="headerlink" title="Building a Unified SSH and VPN Connection Manager for Linux"></a>Building a Unified SSH and VPN Connection Manager for Linux</h1><p>As a software engineer, I frequently connect to remote servers, establish SSH tunnels, and switch between different VPN environments.</p>
+<p>Although tools like SSH, OpenVPN, and OpenConnect are powerful, repeatedly entering connection parameters, usernames, passwords, and two-factor authentication codes can become tedious.</p>
+<p>I wanted a simpler workflow: <strong>one command to manage all my SSH and VPN connections, integrated with KeePassXC for credential management.</strong></p>
+<p>The result is a shell utility called <code>tun</code>, built using shell functions, <code>fzf</code>, SSH, KeePassXC, and OpenConnect.</p>
+<h2 id="What-Does-It-Do"><a href="#What-Does-It-Do" class="headerlink" title="What Does It Do?"></a>What Does It Do?</h2><p>The <code>tun</code> command provides a unified interface for:</p>
+<ul>
+<li>Regular SSH connections</li>
+<li>Local SSH port forwarding (<code>-L</code>)</li>
+<li>Reverse SSH port forwarding (<code>-R</code>)</li>
+<li>SOCKS5 proxies (<code>-D</code>)</li>
+<li>OpenConnect and OpenVPN connections</li>
+<li>Automatic credential retrieval from KeePassXC</li>
+<li>Optional TOTP-based two-factor authentication</li>
+<li>Automatic VPN reconnection after session expiration</li>
+</ul>
+<p>It supports both interactive selection through <code>fzf</code> and direct command-line arguments.</p>
+<h2 id="1-A-Unified-Command-Line-Interface"><a href="#1-A-Unified-Command-Line-Interface" class="headerlink" title="1. A Unified Command-Line Interface"></a>1. A Unified Command-Line Interface</h2><p>Instead of remembering different commands for different connection types, I can simply execute:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tun</span><br></pre></td></tr></table></figure>
+
+<p>This opens an interactive <code>fzf</code> menu:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Select Connection Type</span><br><span class="line"></span><br><span class="line">&gt; VPN</span><br><span class="line">  SSH Connection</span><br><span class="line">  Local (-L)</span><br><span class="line">  Reverse (-R)</span><br><span class="line">  SOCKS5 (-D)</span><br></pre></td></tr></table></figure>
+
+<p>After selecting a connection type, the script displays available hosts or VPN configurations.</p>
+<p>For example, choosing SSH displays the aliases and addresses defined in <code>~/.ssh/config</code>:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Select SSH Host</span><br><span class="line"></span><br><span class="line">work/kubernetes                 10.0.0.10</span><br><span class="line">work/database                   10.0.0.20</span><br><span class="line">homelab/proxmox                 192.168.1.100</span><br></pre></td></tr></table></figure>
+
+<p>The script uses <code>ssh -G</code> to retrieve effective hostnames, so configuration options such as <code>HostName</code>, <code>Port</code>, and <code>ProxyJump</code> are respected.</p>
+<p>For my setup, only SSH aliases containing <code>/</code> appear in the interactive selection menu. This allows me to organize hosts by environment.</p>
+<h3 id="Direct-Command-Line-Arguments"><a href="#Direct-Command-Line-Arguments" class="headerlink" title="Direct Command-Line Arguments"></a>Direct Command-Line Arguments</h3><p>Sometimes an interactive menu is unnecessary, especially when repeating a connection.</p>
+<p>The script also supports direct arguments:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Regular SSH connection</span></span><br><span class="line">tun ssh work/kubernetes</span><br><span class="line"></span><br><span class="line"><span class="comment"># Local port forwarding</span></span><br><span class="line">tun <span class="built_in">local</span> work/kubernetes 9191 443</span><br><span class="line"></span><br><span class="line"><span class="comment"># Reverse port forwarding</span></span><br><span class="line">tun reverse work/kubernetes 9000 3000</span><br><span class="line"></span><br><span class="line"><span class="comment"># SOCKS5 proxy (default port: 9090)</span></span><br><span class="line">tun socks work/kubernetes</span><br><span class="line"></span><br><span class="line"><span class="comment"># SOCKS5 proxy with a custom port</span></span><br><span class="line">tun socks work/kubernetes 1080</span><br><span class="line"></span><br><span class="line"><span class="comment"># VPN connection</span></span><br><span class="line">tun vpn work</span><br></pre></td></tr></table></figure>
+
+<p>This makes the same utility useful for both occasional interactive connections and frequently used commands.</p>
+<h2 id="2-Managing-SSH-Hosts-with-SSH-Config"><a href="#2-Managing-SSH-Hosts-with-SSH-Config" class="headerlink" title="2. Managing SSH Hosts with SSH Config"></a>2. Managing SSH Hosts with SSH Config</h2><p>Instead of maintaining a separate hosts database, the script reads <code>~/.ssh/config</code>.</p>
+<p>Example:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Host work/kubernetes</span><br><span class="line">    HostName 10.0.0.10</span><br><span class="line">    User admin</span><br><span class="line">    Port 2222</span><br><span class="line"></span><br><span class="line">Host work/database</span><br><span class="line">    HostName 10.0.0.20</span><br><span class="line">    User developer</span><br><span class="line">    Port 22</span><br><span class="line"></span><br><span class="line">Host homelab/proxmox</span><br><span class="line">    HostName 192.168.1.100</span><br><span class="line">    User root</span><br><span class="line">    IdentityFile ~/.ssh/id_ed25519</span><br><span class="line">    IdentitiesOnly yes</span><br></pre></td></tr></table></figure>
+
+<p>Using SSH configuration provides several advantages:</p>
+<ul>
+<li>Connection details stay in one place.</li>
+<li>Standard SSH features work without additional implementation.</li>
+<li>Configuration changes are reflected when the script runs.</li>
+<li>Authentication can be configured independently for each server.</li>
+</ul>
+<h3 id="SSH-Key-Detection"><a href="#SSH-Key-Detection" class="headerlink" title="SSH Key Detection"></a>SSH Key Detection</h3><p>One requirement was avoiding unnecessary password prompts for servers configured with SSH keys.</p>
+<p>The script checks whether an explicit <code>IdentityFile</code> is configured.</p>
+<p>If a key is configured, it uses ordinary SSH authentication without retrieving credentials from KeePass.</p>
+<p>Otherwise, it attempts to retrieve a username and password from KeePassXC.</p>
+<h2 id="3-Integrating-KeePassXC-for-SSH-Credentials"><a href="#3-Integrating-KeePassXC-for-SSH-Credentials" class="headerlink" title="3. Integrating KeePassXC for SSH Credentials"></a>3. Integrating KeePassXC for SSH Credentials</h2><p>I use KeePassXC to manage credentials, so I wanted the connection utility to retrieve them automatically.</p>
+<p>My KeePass database follows a structure that mirrors SSH host aliases:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">SSH/</span><br><span class="line">├── work/</span><br><span class="line">│   ├── kubernetes/</span><br><span class="line">│   │   ├── Administrator</span><br><span class="line">│   │   └── Developer</span><br><span class="line">│   └── database/</span><br><span class="line">│       └── DBA</span><br><span class="line">└── homelab/</span><br><span class="line">    └── server/</span><br><span class="line">        └── Admin</span><br></pre></td></tr></table></figure>
+
+<p>For example, selecting <code>work/kubernetes</code> makes the script search:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keepass <span class="built_in">ls</span> -R -f <span class="string">&quot;SSH/work/kubernetes&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>The <code>keepass</code> command is a custom shell function wrapping <code>keepassxc-cli</code> with my default database path.</p>
+<h3 id="Automatic-Credential-Selection"><a href="#Automatic-Credential-Selection" class="headerlink" title="Automatic Credential Selection"></a>Automatic Credential Selection</h3><p>The script handles three scenarios:</p>
+<p><strong>No credentials found:</strong> It asks for a username and password.</p>
+<p><strong>One credential found:</strong> It automatically selects that credential.</p>
+<p><strong>Multiple credentials found:</strong> It displays an <code>fzf</code> menu containing entry names and usernames.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Select SSH Credential</span><br><span class="line"></span><br><span class="line">Administrator                    root</span><br><span class="line">Developer                        ubuntu</span><br><span class="line">Service Account                  deploy</span><br></pre></td></tr></table></figure>
+
+<p>After selection, it retrieves both attributes:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">keepass show \</span><br><span class="line">    -a username \</span><br><span class="line">    -a password \</span><br><span class="line">    <span class="string">&quot;SSH/work/kubernetes/Administrator&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Passing-Passwords-to-SSH"><a href="#Passing-Passwords-to-SSH" class="headerlink" title="Passing Passwords to SSH"></a>Passing Passwords to SSH</h3><p>OpenSSH doesn’t provide a standard command-line option for supplying passwords non-interactively.</p>
+<p>For password-based connections, I use <code>sshpass</code> with a dedicated file descriptor:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sshpass -d 3 ssh \</span><br><span class="line">    -l <span class="string">&quot;<span class="variable">$username</span>&quot;</span> \</span><br><span class="line">    <span class="string">&quot;<span class="variable">$server</span>&quot;</span> 3&lt;&lt;&lt; <span class="string">&quot;<span class="variable">$password</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Unlike <code>sshpass -p</code>, this avoids placing the password directly in the process command-line arguments.</p>
+<p>SSH key authentication is still preferable where available, but this provides a practical integration with an existing password manager.</p>
+<h2 id="4-Managing-VPN-Profiles-with-OpenConnect-and-OpenVPN"><a href="#4-Managing-VPN-Profiles-with-OpenConnect-and-OpenVPN" class="headerlink" title="4. Managing VPN Profiles with OpenConnect and OpenVPN"></a>4. Managing VPN Profiles with OpenConnect and OpenVPN</h2><p>The script supports two VPN configuration extensions:</p>
+<table>
+<thead>
+<tr>
+<th>Extension</th>
+<th>VPN client</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>.conf</code></td>
+<td>OpenConnect</td>
+</tr>
+<tr>
+<td><code>.ovpn</code></td>
+<td>OpenVPN</td>
+</tr>
+</tbody></table>
+<p>My VPN directory looks like this:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">~/vpn/</span><br><span class="line">├── work.conf</span><br><span class="line">├── customer.conf</span><br><span class="line">├── production.conf</span><br><span class="line">└── home.ovpn</span><br></pre></td></tr></table></figure>
+
+<p>Running:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tun vpn</span><br></pre></td></tr></table></figure>
+
+<p>opens an <code>fzf</code> menu containing these profiles.</p>
+<p>Alternatively, I can connect directly:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tun vpn work</span><br></pre></td></tr></table></figure>
+
+<p>The script automatically selects <code>work.conf</code> when it uniquely matches the supplied name.</p>
+<h3 id="OpenConnect-Configuration"><a href="#OpenConnect-Configuration" class="headerlink" title="OpenConnect Configuration"></a>OpenConnect Configuration</h3><p>OpenConnect supports several VPN protocols, including Cisco AnyConnect, Fortinet, and GlobalProtect.</p>
+<p>Rather than hardcoding protocol-specific settings in the shell function, I store them directly in each VPN profile.</p>
+<p>Example <code>work.conf</code>:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">server</span>=vpn.work.com:<span class="number">443</span></span><br><span class="line"><span class="attr">protocol</span>=fortinet</span><br><span class="line"></span><br><span class="line"><span class="attr">interface</span>=vpn-work</span><br><span class="line"><span class="attr">useragent</span>=FortiSSLVPN</span><br><span class="line"></span><br><span class="line">no-external-auth</span><br><span class="line"><span class="attr">reconnect-timeout</span>=<span class="number">3600</span></span><br><span class="line"></span><br><span class="line"><span class="attr">script</span>= vpn-slice <span class="number">192.168</span>.<span class="number">10.0</span>/<span class="number">24</span> freeipa.work.test=<span class="number">192.168</span>.<span class="number">10.128</span> rancher.work.test=<span class="number">192.168</span>.<span class="number">10.114</span> dev.rancher.work.test=<span class="number">192.168</span>.<span class="number">10.114</span> haproxy.dev.rancher.work.test=<span class="number">192.168</span>.<span class="number">10.115</span></span><br></pre></td></tr></table></figure>
+
+<p>This example also uses <code>vpn-slice</code> for split tunneling, allowing selected networks to be routed through the VPN rather than sending all traffic through it.</p>
+<p>The <code>script</code> directive requires <code>vpn-slice</code> to be installed at the specified location. Other options, such as <code>no-external-auth</code>, should be enabled only when compatible with the VPN gateway.</p>
+<h2 id="5-Automatic-VPN-Authentication-with-KeePassXC"><a href="#5-Automatic-VPN-Authentication-with-KeePassXC" class="headerlink" title="5. Automatic VPN Authentication with KeePassXC"></a>5. Automatic VPN Authentication with KeePassXC</h2><p>For VPN connections, I use a simpler KeePass structure than for SSH:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">VPN/</span><br><span class="line">├── work</span><br><span class="line">├── customer</span><br><span class="line">├── production</span><br><span class="line">└── home</span><br></pre></td></tr></table></figure>
+
+<p>The script matches the VPN configuration filename, without its extension, to the KeePass entry title.</p>
+<p>For example:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">VPN profile:   ~/vpn/work.conf</span><br><span class="line">KeePass entry: VPN/work</span><br></pre></td></tr></table></figure>
+
+<p>This avoids opening another credential-selection menu.</p>
+<p>If the matching KeePass entry cannot be retrieved, the script launches the VPN client normally and lets it handle authentication interactively.</p>
+<h3 id="Supporting-Two-Factor-Authentication"><a href="#Supporting-Two-Factor-Authentication" class="headerlink" title="Supporting Two-Factor Authentication"></a>Supporting Two-Factor Authentication</h3><p>Some VPN servers require a password followed by a separate time-based one-time password (TOTP).</p>
+<p>KeePassXC can generate these codes when a TOTP secret is configured for the entry.</p>
+<p>The script attempts to retrieve all three values:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">keepass show \</span><br><span class="line">    -a username \</span><br><span class="line">    -a password \</span><br><span class="line">    -t \</span><br><span class="line">    <span class="string">&quot;VPN/work&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>If TOTP isn’t configured, KeePassXC may return an error. In that case, the script retries without <code>-t</code> and continues with the username and password.</p>
+<p>This makes TOTP optional on a per-entry basis.</p>
+<h2 id="6-Automatic-VPN-Reconnection"><a href="#6-Automatic-VPN-Reconnection" class="headerlink" title="6. Automatic VPN Reconnection"></a>6. Automatic VPN Reconnection</h2><p>Another problem was session expiration.</p>
+<p>OpenConnect provides a <code>reconnect-timeout</code> option for recovering interrupted connections. However, once a VPN authentication session expires, a new login may be required.</p>
+<p>To handle this, I added a reconnection supervisor.</p>
+<p>The workflow is:</p>
+<ol>
+<li>Connect to the VPN.</li>
+<li>Keep the VPN client running in the foreground.</li>
+<li>Detect when the VPN process exits.</li>
+<li>Retrieve credentials and a fresh TOTP code.</li>
+<li>Wait five seconds.</li>
+<li>Attempt to establish a new VPN session.</li>
+</ol>
+<p>The retry loop is conceptually simple:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> :; <span class="keyword">do</span></span><br><span class="line">    <span class="comment"># Retrieve fresh credentials and TOTP</span></span><br><span class="line">    <span class="comment"># Start the VPN connection</span></span><br><span class="line"></span><br><span class="line">    rc=$?</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Stop on normal or intentional termination</span></span><br><span class="line">    [ <span class="string">&quot;<span class="variable">$rc</span>&quot;</span> -eq 0 ] &amp;&amp; <span class="built_in">break</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">sleep</span> 5</span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+
+<p>The implementation also tracks connection duration and stops after three rapid failures, reducing the risk of repeated authentication failures.</p>
+<p>Reconnection begins only after the VPN client exits. The script does not independently monitor the authentication cookie’s expiration time.</p>
+<p>For unattended reconnection, KeePass must remain accessible, and any required privileges or MFA approvals must still be satisfied.</p>
+<h2 id="7-Complete-Installation-Guide"><a href="#7-Complete-Installation-Guide" class="headerlink" title="7. Complete Installation Guide"></a>7. Complete Installation Guide</h2><p>Here is an end-to-end installation guide for Fedora, Arch Linux and Ubuntu&#x2F;Debian. The shell functions support both Bash and Zsh.</p>
+<h3 id="Step-1-Install-Dependencies"><a href="#Step-1-Install-Dependencies" class="headerlink" title="Step 1: Install Dependencies"></a>Step 1: Install Dependencies</h3><p><strong>Fedora:</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> dnf install \</span><br><span class="line">    openssh-clients \</span><br><span class="line">    fzf \</span><br><span class="line">    sshpass \</span><br><span class="line">    keepassxc \</span><br><span class="line">    openconnect \</span><br><span class="line">    openvpn</span><br></pre></td></tr></table></figure>
+
+<p><strong>Arch Linux:</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> pacman -Syu --needed \</span><br><span class="line">    openssh \</span><br><span class="line">    fzf \</span><br><span class="line">    sshpass \</span><br><span class="line">    keepassxc \</span><br><span class="line">    openconnect \</span><br><span class="line">    openvpn</span><br></pre></td></tr></table></figure>
+
+<p><strong>Ubuntu &#x2F; Debian:</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt update</span><br><span class="line"></span><br><span class="line"><span class="built_in">sudo</span> apt install \</span><br><span class="line">    openssh-client \</span><br><span class="line">    fzf \</span><br><span class="line">    sshpass \</span><br><span class="line">    keepassxc \</span><br><span class="line">    openconnect \</span><br><span class="line">    openvpn</span><br></pre></td></tr></table></figure>
+
+<h3 id="Step-2-Create-the-Directory-Structure"><a href="#Step-2-Create-the-Directory-Structure" class="headerlink" title="Step 2: Create the Directory Structure"></a>Step 2: Create the Directory Structure</h3><p>Create the directories for your configuration files and shell functions:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p \</span><br><span class="line">    <span class="string">&quot;<span class="variable">$HOME</span>/.config/shell&quot;</span> \</span><br><span class="line">    <span class="string">&quot;<span class="variable">$HOME</span>/.ssh&quot;</span> \</span><br><span class="line">    <span class="string">&quot;<span class="variable">$HOME</span>/vpn&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>The resulting structure will look like this:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">~/</span><br><span class="line">├── .config/</span><br><span class="line">│   └── shell/</span><br><span class="line">│       └── conn-tun.sh</span><br><span class="line">├── .ssh/</span><br><span class="line">│   └── config</span><br><span class="line">├── vpn/</span><br><span class="line">│   ├── work.conf</span><br><span class="line">│   └── home.ovpn</span><br><span class="line">└── Vault.kdbx</span><br></pre></td></tr></table></figure>
+
+<h3 id="Step-3-Install-the-Connection-Script"><a href="#Step-3-Install-the-Connection-Script" class="headerlink" title="Step 3: Install the Connection Script"></a>Step 3: Install the Connection Script</h3><p>Save the complete <code>conn-tun.sh</code> script containing the <code>tun</code> and <code>conn-vpn</code> functions.</p>
+<p>From the directory containing the downloaded script, run:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">install -m 600 ./conn-tun.sh \</span><br><span class="line">    <span class="string">&quot;<span class="variable">$HOME</span>/.config/shell/conn-tun.sh&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>The script is designed to be sourced into your existing shell rather than launched as a separate executable.</p>
+<h3 id="Step-4-Configure-the-KeePassXC-Helper"><a href="#Step-4-Configure-the-KeePassXC-Helper" class="headerlink" title="Step 4: Configure the KeePassXC Helper"></a>Step 4: Configure the KeePassXC Helper</h3><p>I use a small shell function to avoid specifying the KeePass database path every time.</p>
+<p>Add the following to <code>~/.zshrc</code> or <code>~/.bashrc</code>:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">keepass</span></span>() &#123;</span><br><span class="line">    <span class="built_in">local</span> db=<span class="string">&quot;<span class="variable">$HOME</span>/Vault.kdbx&quot;</span></span><br><span class="line">    <span class="built_in">local</span> cmd=<span class="string">&quot;<span class="variable">$&#123;1:-&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> [ -z <span class="string">&quot;<span class="variable">$cmd</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">printf</span> <span class="string">&#x27;Usage: keepass &lt;command&gt; [options]\n&#x27;</span></span><br><span class="line">        <span class="built_in">return</span> 1</span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">shift</span></span><br><span class="line"></span><br><span class="line">    keepassxc-cli <span class="string">&quot;<span class="variable">$cmd</span>&quot;</span> <span class="string">&quot;<span class="variable">$db</span>&quot;</span> <span class="string">&quot;<span class="variable">$@</span>&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Replace <code>~/Vault.kdbx</code> with the actual location of your KeePass database.</p>
+<p>Now, instead of running:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keepassxc-cli <span class="built_in">ls</span> ~/Vault.kdbx SSH</span><br></pre></td></tr></table></figure>
+
+<p>I can simply use:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keepass <span class="built_in">ls</span> SSH</span><br></pre></td></tr></table></figure>
+
+<p>Test the helper:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keepass <span class="built_in">ls</span> -f VPN</span><br></pre></td></tr></table></figure>
+
+<p>KeePassXC may request the database master password when executing CLI commands, even if the graphical application is already unlocked.</p>
+<h3 id="Step-5-Configure-SSH-Hosts"><a href="#Step-5-Configure-SSH-Hosts" class="headerlink" title="Step 5: Configure SSH Hosts"></a>Step 5: Configure SSH Hosts</h3><p>Create or update <code>~/.ssh/config</code>:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"># Kubernetes server - password authentication</span><br><span class="line">Host work/kubernetes</span><br><span class="line">    HostName 10.0.0.10</span><br><span class="line">    User ubuntu</span><br><span class="line">    Port 2222</span><br><span class="line">    ServerAliveInterval 30</span><br><span class="line"></span><br><span class="line"># Database server - password authentication</span><br><span class="line">Host work/database</span><br><span class="line">    HostName 10.0.0.20</span><br><span class="line">    User developer</span><br><span class="line">    Port 22</span><br><span class="line"></span><br><span class="line"># Proxmox server - SSH key authentication</span><br><span class="line">Host homelab/proxmox</span><br><span class="line">    HostName 192.168.1.100</span><br><span class="line">    User root</span><br><span class="line">    IdentityFile ~/.ssh/id_ed25519</span><br><span class="line">    IdentitiesOnly yes</span><br><span class="line"></span><br><span class="line"># Shared defaults</span><br><span class="line">Host *</span><br><span class="line">    ServerAliveInterval 30</span><br><span class="line">    ServerAliveCountMax 3</span><br><span class="line">    ConnectTimeout 10</span><br></pre></td></tr></table></figure>
+
+<p>Apply appropriate file permissions:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> 700 ~/.ssh</span><br><span class="line"><span class="built_in">chmod</span> 600 ~/.ssh/config</span><br></pre></td></tr></table></figure>
+
+<p>Verify that OpenSSH can read the configuration:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ssh -G work/kubernetes |</span><br><span class="line">    grep -E <span class="string">&#x27;^(hostname|user|port) &#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>Expected output:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">hostname 10.0.0.10</span><br><span class="line">user ubuntu</span><br><span class="line">port 2222</span><br></pre></td></tr></table></figure>
+
+<p>The <code>tun</code> function will use these aliases automatically.</p>
+<h3 id="Step-6-Configure-KeePassXC-SSH-Credentials"><a href="#Step-6-Configure-KeePassXC-SSH-Credentials" class="headerlink" title="Step 6: Configure KeePassXC SSH Credentials"></a>Step 6: Configure KeePassXC SSH Credentials</h3><p>Open your KeePassXC database and create the following groups and entries:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">SSH/</span><br><span class="line">└── work/</span><br><span class="line">    ├── kubernetes/</span><br><span class="line">    │   └── Administrator</span><br><span class="line">    └── database/</span><br><span class="line">        └── Developer</span><br></pre></td></tr></table></figure>
+
+<p>Example fields for the <code>Administrator</code> entry:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Title</td>
+<td>Administrator</td>
+</tr>
+<tr>
+<td>Username</td>
+<td>ubuntu</td>
+</tr>
+<tr>
+<td>Password</td>
+<td>Your SSH password</td>
+</tr>
+</tbody></table>
+<p>The matching group is determined by the SSH alias:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SSH alias:     work/kubernetes</span><br><span class="line">KeePass group: SSH/work/kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>You can verify the entry using:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keepass <span class="built_in">ls</span> -R -f <span class="string">&quot;SSH/work/kubernetes&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>And retrieve its username:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">keepass show \</span><br><span class="line">    -a username \</span><br><span class="line">    <span class="string">&quot;SSH/work/kubernetes/Administrator&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>For <code>homelab/proxmox</code>, which uses an SSH key, a KeePass entry isn’t necessary.</p>
+<h3 id="Step-7-Create-VPN-Configurations"><a href="#Step-7-Create-VPN-Configurations" class="headerlink" title="Step 7: Create VPN Configurations"></a>Step 7: Create VPN Configurations</h3><p>For OpenConnect, create <code>~/vpn/work.conf</code>:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> &gt; <span class="string">&quot;<span class="variable">$HOME</span>/vpn/work.conf&quot;</span> &lt;&lt;<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line">server=vpn.example.com:443</span><br><span class="line">protocol=fortinet</span><br><span class="line">interface=vpn-work</span><br><span class="line">reconnect-timeout=3600</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p>Replace the example address and options with those required by your VPN gateway.</p>
+<p>Additional options can be added when needed:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">useragent</span>=FortiSSLVPN</span><br><span class="line">no-external-auth</span><br><span class="line"><span class="attr">servercert</span>=pin-sha256:YOUR_ACTUAL_CERTIFICATE_PIN</span><br></pre></td></tr></table></figure>
+
+<p>If you use <code>servercert</code>, obtain and verify the actual server certificate pin through a trusted source. Do not use the placeholder shown above.</p>
+<p>For OpenVPN, copy a valid <code>.ovpn</code> configuration supplied by your VPN administrator:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cp</span> /path/to/your/openvpn-profile.ovpn \</span><br><span class="line">    <span class="string">&quot;<span class="variable">$HOME</span>/vpn/home.ovpn&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>OpenVPN and OpenConnect use different configuration formats, so keep their files separate.</p>
+<h3 id="Step-8-Configure-KeePassXC-VPN-Credentials"><a href="#Step-8-Configure-KeePassXC-VPN-Credentials" class="headerlink" title="Step 8: Configure KeePassXC VPN Credentials"></a>Step 8: Configure KeePassXC VPN Credentials</h3><p>In KeePassXC, create a group called <code>VPN</code> with an entry named <code>work</code>.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">VPN/</span><br><span class="line">├── work</span><br><span class="line">└── home</span><br></pre></td></tr></table></figure>
+
+<p>Example fields:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Title</td>
+<td>work</td>
+</tr>
+<tr>
+<td>Username</td>
+<td>employee</td>
+</tr>
+<tr>
+<td>Password</td>
+<td>Your VPN password</td>
+</tr>
+<tr>
+<td>TOTP</td>
+<td>Optional TOTP secret</td>
+</tr>
+</tbody></table>
+<p>To configure TOTP in KeePassXC, open the entry and use its TOTP configuration option to add the secret provided during your VPN MFA enrollment.</p>
+<p>The filename and KeePass entry title must match:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">VPN profile:   work.conf</span><br><span class="line">KeePass entry: VPN/work</span><br></pre></td></tr></table></figure>
+
+<p>Test retrieval:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">keepass show \</span><br><span class="line">    -a username \</span><br><span class="line">    -a password \</span><br><span class="line">    <span class="string">&quot;VPN/work&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>If you configured TOTP:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keepass show -t <span class="string">&quot;VPN/work&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Do not print real credentials or OTP codes in shared terminals, screenshots, or logs.</p>
+<h3 id="Step-9-Load-the-Shell-Functions"><a href="#Step-9-Load-the-Shell-Functions" class="headerlink" title="Step 9: Load the Shell Functions"></a>Step 9: Load the Shell Functions</h3><p>Add this line to <code>~/.zshrc</code>:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">source</span> <span class="string">&quot;<span class="variable">$HOME</span>/.config/shell/conn-tun.sh&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>For Bash, add it to <code>~/.bashrc</code> instead.</p>
+<p>Reload your shell configuration:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
+
+<p>Verify that both functions are available:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">type</span> tun</span><br><span class="line"><span class="built_in">type</span> conn-vpn</span><br><span class="line"><span class="built_in">type</span> keepass</span><br></pre></td></tr></table></figure>
+
+<p>All three should be recognized as shell functions.</p>
+<h3 id="Step-10-Prepare-VPN-Permissions"><a href="#Step-10-Prepare-VPN-Permissions" class="headerlink" title="Step 10: Prepare VPN Permissions"></a>Step 10: Prepare VPN Permissions</h3><p>The VPN script launches OpenConnect or OpenVPN using <code>sudo -n</code>, which does not prompt for a password.</p>
+<p>For an initial test, authenticate sudo first:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> -v</span><br><span class="line">tun vpn work</span><br></pre></td></tr></table></figure>
+
+<p>For unattended reconnection after the sudo authentication ticket expires, the VPN process needs an appropriate privilege arrangement.</p>
+<p>Avoid giving arbitrary user-writable scripts or VPN configurations unrestricted root execution through broad <code>NOPASSWD</code> rules. A controlled root-owned launcher or narrowly scoped service is a safer option.</p>
+<h2 id="8-Complete-Usage-Examples"><a href="#8-Complete-Usage-Examples" class="headerlink" title="8. Complete Usage Examples"></a>8. Complete Usage Examples</h2><p>With installation finished, here are practical examples of using the utility.</p>
+<h3 id="Example-1-Connect-to-a-Server-with-KeePassXC"><a href="#Example-1-Connect-to-a-Server-with-KeePassXC" class="headerlink" title="Example 1: Connect to a Server with KeePassXC"></a>Example 1: Connect to a Server with KeePassXC</h3><p>Execute:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tun ssh work/kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>The script performs the following actions:</p>
+<ol>
+<li>Resolves <code>work/kubernetes</code> using <code>~/.ssh/config</code>.</li>
+<li>Checks whether an explicit <code>IdentityFile</code> exists.</li>
+<li>Searches <code>SSH/work/kubernetes</code> in KeePassXC.</li>
+<li>Automatically selects the credential if there is only one entry.</li>
+<li>Connects using the retrieved username and password.</li>
+</ol>
+<p>Example output:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Looking for KeePass entries: SSH/work/kubernetes</span><br><span class="line">Using KeePass entry: Administrator</span><br><span class="line"></span><br><span class="line">Connecting to work/kubernetes...</span><br><span class="line">Authenticating as ubuntu (KeePass)</span><br></pre></td></tr></table></figure>
+
+<p>No additional <code>fzf</code> selection is needed because the host was supplied directly.</p>
+<h3 id="Example-2-Connect-Using-an-SSH-Key"><a href="#Example-2-Connect-Using-an-SSH-Key" class="headerlink" title="Example 2: Connect Using an SSH Key"></a>Example 2: Connect Using an SSH Key</h3><p>Execute:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tun ssh homelab/proxmox</span><br></pre></td></tr></table></figure>
+
+<p>Because <code>homelab/proxmox</code> has an <code>IdentityFile</code> configured, the script skips KeePass credential retrieval and uses the configured SSH identity.</p>
+<p>This is useful for frequently accessed infrastructure servers.</p>
+<h3 id="Example-3-Create-a-Local-SSH-Tunnel"><a href="#Example-3-Create-a-Local-SSH-Tunnel" class="headerlink" title="Example 3: Create a Local SSH Tunnel"></a>Example 3: Create a Local SSH Tunnel</h3><p>Suppose a remote server exposes an HTTPS service on port 443, but you want to access it through local port 9191.</p>
+<p>Execute:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tun <span class="built_in">local</span> work/kubernetes 9191 443</span><br></pre></td></tr></table></figure>
+
+<p>The resulting forwarding operation is equivalent to:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ssh -N -T \</span><br><span class="line">    -L 127.0.0.1:9191:127.0.0.1:443 \</span><br><span class="line">    work/kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>Now test the connection locally:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -vk https://127.0.0.1:9191</span><br></pre></td></tr></table></figure>
+
+<p>You can also specify another destination host reachable from the SSH server:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tun <span class="built_in">local</span> work/kubernetes 9191 443 10.0.0.50</span><br></pre></td></tr></table></figure>
+
+<p>This forwards your local port 9191 to <code>10.0.0.50:443</code> through the SSH server.</p>
+<h3 id="Example-4-Create-a-Reverse-SSH-Tunnel"><a href="#Example-4-Create-a-Reverse-SSH-Tunnel" class="headerlink" title="Example 4: Create a Reverse SSH Tunnel"></a>Example 4: Create a Reverse SSH Tunnel</h3><p>Suppose you’re running a development application locally on port 3000, and you want to expose it to the remote SSH server on port 9000.</p>
+<p>Execute:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tun reverse work/kubernetes 9000 3000</span><br></pre></td></tr></table></figure>
+
+<p>The equivalent SSH command is:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ssh -N -T \</span><br><span class="line">    -R 127.0.0.1:9000:127.0.0.1:3000 \</span><br><span class="line">    work/kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>From the remote SSH server, test:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:9000</span><br></pre></td></tr></table></figure>
+
+<p>Reverse forwarding requires the server’s SSH daemon to allow remote TCP forwarding.</p>
+<p>A restrictive configuration can use:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">AllowTcpForwarding remote</span><br><span class="line">GatewayPorts no</span><br></pre></td></tr></table></figure>
+
+<p>The tunnel also remains subject to any <code>PermitListen</code>, key-specific forwarding restrictions, and port conflicts.</p>
+<h3 id="Example-5-Create-a-SOCKS5-Proxy"><a href="#Example-5-Create-a-SOCKS5-Proxy" class="headerlink" title="Example 5: Create a SOCKS5 Proxy"></a>Example 5: Create a SOCKS5 Proxy</h3><p>Execute:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tun socks work/kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>This creates a local SOCKS5 proxy on port <code>9090</code>.</p>
+<p>Equivalent SSH command:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ssh -N -T \</span><br><span class="line">    -D 127.0.0.1:9090 \</span><br><span class="line">    work/kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>To test it:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl \</span><br><span class="line">    --socks5-hostname 127.0.0.1:9090 \</span><br><span class="line">    https://ifconfig.me</span><br></pre></td></tr></table></figure>
+
+<p>The request is routed through the SSH server.</p>
+<p>Using <code>--socks5-hostname</code> also delegates hostname resolution to the proxy side.</p>
+<p>To use a different SOCKS5 port:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tun socks work/kubernetes 1080</span><br></pre></td></tr></table></figure>
+
+<h3 id="Example-6-Connect-to-a-VPN-Automatically"><a href="#Example-6-Connect-to-a-VPN-Automatically" class="headerlink" title="Example 6: Connect to a VPN Automatically"></a>Example 6: Connect to a VPN Automatically</h3><p>Execute:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tun vpn work</span><br></pre></td></tr></table></figure>
+
+<p>The script finds <code>~/vpn/work.conf</code>, then searches for the corresponding KeePass entry:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">VPN/work</span><br></pre></td></tr></table></figure>
+
+<p>Example output:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Selected VPN: work.conf</span><br><span class="line">Looking for KeePass entry: VPN/work</span><br><span class="line">Using KeePass: VPN/work</span><br><span class="line"></span><br><span class="line">Connecting to work.conf...</span><br></pre></td></tr></table></figure>
+
+<p>OpenConnect receives the username and password from KeePass, along with a TOTP code when configured.</p>
+<p>If the entry isn’t available, OpenConnect starts directly and handles authentication interactively.</p>
+<h3 id="Example-7-Reconnect-After-VPN-Session-Expiration"><a href="#Example-7-Reconnect-After-VPN-Session-Expiration" class="headerlink" title="Example 7: Reconnect After VPN Session Expiration"></a>Example 7: Reconnect After VPN Session Expiration</h3><p>When the VPN authentication session expires and OpenConnect exits with a failure, the script retries automatically.</p>
+<p>Example:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Selected VPN: work.conf</span><br><span class="line">Looking for KeePass entry: VPN/work</span><br><span class="line">Using KeePass: VPN/work</span><br><span class="line"></span><br><span class="line">Connecting to work.conf...</span><br><span class="line"></span><br><span class="line">VPN disconnected (exit code: 2).</span><br><span class="line">Retrying in 5 seconds...</span><br><span class="line"></span><br><span class="line">Looking for KeePass entry: VPN/work</span><br><span class="line">Using KeePass: VPN/work</span><br><span class="line"></span><br><span class="line">Connecting to work.conf...</span><br></pre></td></tr></table></figure>
+
+<p>A fresh TOTP is retrieved for each authentication attempt.</p>
+<p>The script stops after three rapid connection failures, preventing an endless sequence of unsuccessful authentication attempts.</p>
+<p>Successful unattended reconnection still depends on the availability of KeePass credentials, necessary privileges, and the VPN server’s MFA policy.</p>
+<h3 id="Example-8-Use-the-Interactive-Menu"><a href="#Example-8-Use-the-Interactive-Menu" class="headerlink" title="Example 8: Use the Interactive Menu"></a>Example 8: Use the Interactive Menu</h3><p>When I don’t remember the exact connection name, I simply execute:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tun</span><br></pre></td></tr></table></figure>
+
+<p>After selecting <code>VPN</code>, an example profile menu looks like this:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Select VPN Configuration</span><br><span class="line"></span><br><span class="line">customer.conf</span><br><span class="line">home.ovpn</span><br><span class="line">production.conf</span><br><span class="line">work.conf</span><br></pre></td></tr></table></figure>
+
+<p>After selecting <code>SSH Connection</code>, the host menu looks like this:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Select SSH Host</span><br><span class="line"></span><br><span class="line">homelab/proxmox                 192.168.1.100</span><br><span class="line">work/database                   10.0.0.20</span><br><span class="line">work/kubernetes                 10.0.0.10</span><br></pre></td></tr></table></figure>
+
+<p>This is particularly useful when working with many different environments.</p>
+<h2 id="9-Troubleshooting"><a href="#9-Troubleshooting" class="headerlink" title="9. Troubleshooting"></a>9. Troubleshooting</h2><h3 id="KeePassXC-Keeps-Asking-for-the-Master-Password"><a href="#KeePassXC-Keeps-Asking-for-the-Master-Password" class="headerlink" title="KeePassXC Keeps Asking for the Master Password"></a>KeePassXC Keeps Asking for the Master Password</h3><p><code>keepassxc-cli</code> opens the KeePass database independently of the graphical KeePassXC application.</p>
+<p>The connection script doesn’t bypass database authentication. A secure unlocked credential provider or a persistent CLI session is needed to avoid repeated master-password prompts.</p>
+<h3 id="SSH-Reports-“Administratively-Prohibited”"><a href="#SSH-Reports-“Administratively-Prohibited”" class="headerlink" title="SSH Reports “Administratively Prohibited”"></a>SSH Reports “Administratively Prohibited”</h3><p>If an SSH tunnel reports:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">channel 1: open failed: administratively prohibited: open failed</span><br></pre></td></tr></table></figure>
+
+<p>Check the SSH server’s forwarding configuration:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> sshd -T |</span><br><span class="line">    grep -E <span class="string">&#x27;^(allowtcpforwarding|disableforwarding|permitopen|permitlisten) &#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>The server may be configured to reject TCP forwarding.</p>
+<h3 id="Reverse-Port-Forwarding-Fails"><a href="#Reverse-Port-Forwarding-Fails" class="headerlink" title="Reverse Port Forwarding Fails"></a>Reverse Port Forwarding Fails</h3><p>If a reverse tunnel reports:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Error: remote port forwarding failed for listen port 9090</span><br></pre></td></tr></table></figure>
+
+<p>Check whether the port is occupied:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> ss -ltnp | grep <span class="string">&#x27;:9090&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>Also verify that the SSH server allows remote forwarding.</p>
+<h3 id="OpenConnect-Cannot-Reconnect"><a href="#OpenConnect-Cannot-Reconnect" class="headerlink" title="OpenConnect Cannot Reconnect"></a>OpenConnect Cannot Reconnect</h3><p>Check whether OpenConnect has exited or is still attempting to recover the existing session.</p>
+<p>The wrapper only starts a new authentication attempt after the VPN process exits.</p>
+<p>Also check sudo permissions, KeePass availability, and whether the VPN requires additional interactive authentication.</p>
+<h2 id="10-Security-Considerations"><a href="#10-Security-Considerations" class="headerlink" title="10. Security Considerations"></a>10. Security Considerations</h2><p>Automating SSH and VPN authentication introduces several security considerations.</p>
+<p>The main principles I followed were:</p>
+<ul>
+<li><strong>Avoid hardcoded passwords.</strong> Credentials remain in KeePassXC rather than in scripts.</li>
+<li><strong>Prefer SSH keys.</strong> Hosts configured with an explicit <code>IdentityFile</code> bypass password retrieval.</li>
+<li><strong>Avoid passwords in command-line arguments.</strong> SSH credentials are passed through file descriptors.</li>
+<li><strong>Preserve SSH host-key verification.</strong> The script does not disable SSH server identity checks.</li>
+<li><strong>Limit connection retries.</strong> Repeated rapid VPN failures cause the supervisor to stop.</li>
+<li><strong>Avoid shell tracing.</strong> Running credential-handling functions with <code>set -x</code> could expose sensitive values.</li>
+<li><strong>Restrict privileged operations.</strong> VPN network configuration should not allow arbitrary untrusted scripts to execute as root.</li>
+</ul>
+<p>Credentials still exist temporarily in shell memory, and automation does not eliminate the security implications of storing passwords and TOTP secrets together.</p>
+<h2 id="Bonus-Unlocking-KeePassXC-Automatically-with-Secret-Service"><a href="#Bonus-Unlocking-KeePassXC-Automatically-with-Secret-Service" class="headerlink" title="Bonus: Unlocking KeePassXC Automatically with Secret Service"></a>Bonus: Unlocking KeePassXC Automatically with Secret Service</h2><p>One inconvenience with <code>keepassxc-cli</code> is that it normally asks for the database master password every time a command is executed.</p>
+<p>This becomes particularly annoying when the connection manager needs multiple KeePass operations or automatically reconnects to a VPN after session expiration.</p>
+<p>To solve this, I integrated <code>secret-tool</code> with <code>keepassxc-cli</code>.</p>
+<h3 id="How-It-Works"><a href="#How-It-Works" class="headerlink" title="How It Works"></a>How It Works</h3><p><code>secret-tool</code> communicates with the Linux Secret Service API, which is commonly provided by GNOME Keyring or KDE Wallet.</p>
+<p>Instead of entering the KeePassXC database master password every time, we can securely store it in the desktop keyring and retrieve it when executing CLI commands.</p>
+<p>The workflow is:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">tun</span><br><span class="line"> └── keepass</span><br><span class="line">      ├── secret-tool</span><br><span class="line">      │    └── GNOME Keyring</span><br><span class="line">      │         └── KeePassXC master password</span><br><span class="line">      │</span><br><span class="line">      └── keepassxc-cli</span><br><span class="line">           └── Unlock KeePass database</span><br><span class="line">                └── Retrieve SSH/VPN credentials</span><br></pre></td></tr></table></figure>
+
+<p>This approach doesn’t require modifying the <code>tun</code> or <code>conn-vpn</code> functions.</p>
+<h3 id="Step-1-Install-Secret-Service-Tools"><a href="#Step-1-Install-Secret-Service-Tools" class="headerlink" title="Step 1: Install Secret Service Tools"></a>Step 1: Install Secret Service Tools</h3><p><strong>Fedora:</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> dnf install libsecret</span><br></pre></td></tr></table></figure>
+
+<p><strong>Arch Linux:</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> pacman -S --needed libsecret</span><br></pre></td></tr></table></figure>
+
+<p><strong>Ubuntu &#x2F; Debian:</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install libsecret-tools</span><br></pre></td></tr></table></figure>
+
+<p>Make sure your desktop session has an available Secret Service provider, such as GNOME Keyring.</p>
+<p>Verify the installation:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">command</span> -v secret-tool</span><br></pre></td></tr></table></figure>
+
+<h3 id="Step-2-Configure-the-KeePassXC-Database-Path"><a href="#Step-2-Configure-the-KeePassXC-Database-Path" class="headerlink" title="Step 2: Configure the KeePassXC Database Path"></a>Step 2: Configure the KeePassXC Database Path</h3><p>Add the following environment variable to your <code>~/.zshrc</code> or <code>~/.bashrc</code>:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> KEEPASS_DB_PATH=<span class="string">&quot;<span class="variable">$HOME</span>/Vault.kdbx&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Replace the path with the location of your actual KeePassXC database.</p>
+<p>Reload your shell configuration:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
+
+<h3 id="Step-3-Store-the-KeePassXC-Master-Password"><a href="#Step-3-Store-the-KeePassXC-Master-Password" class="headerlink" title="Step 3: Store the KeePassXC Master Password"></a>Step 3: Store the KeePassXC Master Password</h3><p>Store your database master password in the system keyring:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">secret-tool store \</span><br><span class="line">    --label=<span class="string">&quot;KeePassXC Database&quot;</span> \</span><br><span class="line">    application keepassxc \</span><br><span class="line">    database <span class="string">&quot;<span class="variable">$KEEPASS_DB_PATH</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>The command prompts for the password securely through the terminal.</p>
+<p>The stored secret is identified by two attributes:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>application</code></td>
+<td><code>keepassxc</code></td>
+</tr>
+<tr>
+<td><code>database</code></td>
+<td>Path specified in <code>KEEPASS_DB_PATH</code></td>
+</tr>
+</tbody></table>
+<p>These attributes allow us to retrieve the correct password later.</p>
+<p>The keyring must be unlocked for the password to be retrieved without additional interaction.</p>
+<h3 id="Step-4-Create-the-KeePass-Helper-Script"><a href="#Step-4-Create-the-KeePass-Helper-Script" class="headerlink" title="Step 4: Create the KeePass Helper Script"></a>Step 4: Create the KeePass Helper Script</h3><p>Create an executable named <code>keepass</code> in <code>~/.local/bin/keepass</code>.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p <span class="string">&quot;<span class="variable">$HOME</span>/.local/bin&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Use the following script:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/usr/bin/env bash</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">set</span> -o pipefail</span><br><span class="line"></span><br><span class="line">cmd=<span class="string">&quot;<span class="variable">$&#123;1:-&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ -z <span class="string">&quot;<span class="variable">$cmd</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;Usage: keepass &lt;command&gt; [options] [args]&quot;</span> &gt;&amp;2</span><br><span class="line">    <span class="built_in">exit</span> 1</span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line">: <span class="string">&quot;<span class="variable">$&#123;KEEPASS_DB_PATH:?KEEPASS_DB_PATH is not set&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">shift</span></span><br><span class="line"></span><br><span class="line">secret-tool lookup \</span><br><span class="line">    application keepassxc \</span><br><span class="line">    database <span class="string">&quot;<span class="variable">$KEEPASS_DB_PATH</span>&quot;</span> |</span><br><span class="line">    keepassxc-cli <span class="string">&quot;<span class="variable">$cmd</span>&quot;</span> -q <span class="string">&quot;<span class="variable">$KEEPASS_DB_PATH</span>&quot;</span> <span class="string">&quot;<span class="variable">$@</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Make it executable:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> 700 <span class="string">&quot;<span class="variable">$HOME</span>/.local/bin/keepass&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Ensure <code>~/.local/bin</code> is included in your <code>PATH</code>. If you previously defined a <code>keepass</code> shell function, remove it or update it to invoke this executable.</p>
+<h3 id="Step-5-Test-the-Integration"><a href="#Step-5-Test-the-Integration" class="headerlink" title="Step 5: Test the Integration"></a>Step 5: Test the Integration</h3><p>List the KeePass groups:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keepass <span class="built_in">ls</span></span><br></pre></td></tr></table></figure>
+
+<p>Retrieve SSH credentials:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keepass <span class="built_in">ls</span> -R -f <span class="string">&quot;SSH/work/kubernetes&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Retrieve a username:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">keepass show \</span><br><span class="line">    -a username \</span><br><span class="line">    <span class="string">&quot;SSH/work/kubernetes/Administrator&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Retrieve a VPN TOTP code:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">keepass show -t <span class="string">&quot;VPN/work&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>With the system keyring unlocked and the correct master password stored, these commands can execute without prompting for the KeePassXC master password each time.</p>
+<h3 id="Security-Considerations"><a href="#Security-Considerations" class="headerlink" title="Security Considerations"></a>Security Considerations</h3><p>This approach improves convenience but changes the security model.</p>
+<p>The KeePassXC database master password is now stored in a second credential store. Anyone or any process that can retrieve that secret from the unlocked keyring could potentially unlock the database.</p>
+<p>It is important to keep the following in mind:</p>
+<ul>
+<li>Use a password-protected system keyring.</li>
+<li>Ensure the keyring locks when the user session is locked or terminated, according to your security requirements.</li>
+<li>Avoid storing the master password in shell history, environment variables, or plaintext configuration files.</li>
+<li>Run the KeePass helper as your normal user, not through <code>sudo</code>.</li>
+<li>Prefer an independent Secret Service provider, such as GNOME Keyring, for this approach. Using KeePassXC itself as the provider for its own master password creates a circular dependency when the database is locked.</li>
+</ul>
+<p>For environments with stronger security requirements, manually unlocking KeePassXC or using dedicated hardware-backed authentication may be preferable.</p>
+<h3 id="Final-Result"><a href="#Final-Result" class="headerlink" title="Final Result"></a>Final Result</h3><p>With this integration, the entire connection workflow becomes:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Interactive connection selection</span></span><br><span class="line">tun</span><br><span class="line"></span><br><span class="line"><span class="comment"># SSH connection with KeePass credentials</span></span><br><span class="line">tun ssh work/kubernetes</span><br><span class="line"></span><br><span class="line"><span class="comment"># SOCKS5 proxy on port 9090</span></span><br><span class="line">tun socks work/kubernetes</span><br><span class="line"></span><br><span class="line"><span class="comment"># VPN connection with KeePass and optional TOTP</span></span><br><span class="line">tun vpn work</span><br></pre></td></tr></table></figure>
+
+<p>The connection manager can retrieve credentials using the same <code>keepass</code> interface without repeatedly asking for the database master password, provided the system keyring is available and unlocked.</p>
+<p>This is especially useful for automatic VPN reauthentication, where the script needs to retrieve a new TOTP code after the previous VPN session expires.</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>What started as a few SSH aliases eventually became a small connection-management utility.</p>
+<p>By combining <strong>OpenSSH, OpenConnect, OpenVPN, KeePassXC, sshpass, and fzf</strong>, I eliminated much of the repetitive work involved in connecting to remote infrastructure.</p>
+<p>The most useful improvements have been:</p>
+<ul>
+<li>A single command for different connection types.</li>
+<li>Centralized SSH and VPN configuration.</li>
+<li>Creating SSH tunnels and SOCKS5 proxy</li>
+<li>Automatic credential retrieval from KeePassXC.</li>
+<li>Optional TOTP authentication.</li>
+<li>VPN reconnection with fresh authentication credentials.</li>
+<li>Interactive and non-interactive connection workflows.</li>
+</ul>
+<p>The implementation relies mostly on existing Linux tools rather than introducing a new connection-management service.</p>
+<p>For anyone who frequently switches between servers, SSH tunnels, and VPN environments, a lightweight shell-based solution like this can make everyday infrastructure work considerably more convenient.</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/SSH/" rel="tag"># SSH</a>
+              <a href="/tags/VPN/" rel="tag"># VPN</a>
+              <a href="/tags/SOCKS5/" rel="tag"># SOCKS5</a>
+              <a href="/tags/Proxy/" rel="tag"># Proxy</a>
+              <a href="/tags/Port-Forwarding/" rel="tag"># Port Forwarding</a>
+              <a href="/tags/KeePassXC/" rel="tag"># KeePassXC</a>
+              <a href="/tags/OpenConnect/" rel="tag"># OpenConnect</a>
+              <a href="/tags/Bash/" rel="tag"># Bash</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/06/21/nbfc-linux/" rel="prev" title="Control Your Laptop Fans on Linux with nbfc-linux">
+                  <i class="fa fa-chevron-left"></i> Control Your Laptop Fans on Linux with nbfc-linux
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fas fa-code"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Mehmet Ümit Özden</span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+
+
+
+
+
+</body>
+</html>
